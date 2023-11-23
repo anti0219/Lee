@@ -22,6 +22,7 @@ import ltd.newbee.mall.common.ServiceResultEnum;
 import ltd.newbee.mall.controller.vo.NewBeeMallSearchGoodsVO;
 import ltd.newbee.mall.dao.GoodsCategoryMapper;
 import ltd.newbee.mall.dao.NewBeeMallGoodsMapper;
+import ltd.newbee.mall.entity.Answer;
 import ltd.newbee.mall.entity.GoodsCategory;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
 import ltd.newbee.mall.service.NewBeeMallGoodsService;
@@ -142,4 +143,19 @@ public class NewBeeMallGoodsServiceImpl implements NewBeeMallGoodsService {
 		List<Long> answer = goodsMapper.getAnswerById(answerId);//goodsMapper.getAnswerById负责获取sql结果
 		return answer;
 	}
+	
+	 @Override
+	 public int deleteAnswerById(long answerId) {
+		 return goodsMapper.deleteAnswerById(answerId);
+	 }
+	 
+	 @Override
+	 public int insertAnswerQuestion(Answer questionInfo) {
+		 int resultAnswer = goodsMapper.insertAnswer(questionInfo.getAnswerId());
+		 goodsMapper.insertQuestion(questionInfo);
+		 return resultAnswer;
+	 }
+	 
+
+
 }

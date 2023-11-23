@@ -25,11 +25,7 @@ import ltd.newbee.mall.util.ResultGenerator;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -101,5 +97,18 @@ public class GoodsController {
     	return ResultGenerator.genSuccessResult(newBeeMallGoodsService.getAnswerById(answerId)); 
 
     }
-
+    
+    @PostMapping("/answers")
+    @ResponseBody
+    public Result delete(@RequestParam long answerId) {
+    	return ResultGenerator.genSuccessResult(newBeeMallGoodsService.deleteAnswerById(answerId));
+    }
+    
+    @PostMapping("/answers/insert")
+    @ResponseBody
+    public Result insert(@RequestBody Answer questionInfo) {
+    	return ResultGenerator.genSuccessResult(newBeeMallGoodsService.insertAnswerQuestion(questionInfo));
+    }
+    
+    
 }

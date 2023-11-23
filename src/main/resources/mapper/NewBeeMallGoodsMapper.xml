@@ -388,15 +388,29 @@
 		where goods_id = #{goodsId,jdbcType=BIGINT}
 	</update>
 	<select id="getAnswerById" parameterType="long"
-		resultType="ltd.newbee.mall.entity.Answer"> 
-		SELECT
-		a.answer_id,q.question_id, q.question_content 
-		FROM question q
-		JOIN answers a ON q.answer_id = a.answer_id where a.answer_id IN 
-		<foreach
-			item="answerId" collection="answerId" open="(" separator="," close=")">
-		#{answerId,jdbcType=BIGINT}
-        </foreach>
-
+		resultType="ltd.newbee.mall.entity.Answer"> SELECT
+		a.answer_id,q.question_id, q.question_content FROM question q JOIN
+		answers a ON q.answer_id = a.answer_id where a.answer_id IN <foreach
+			item="answerId" collection="answerId" open="(" separator=","
+			close=")">
+			#{answerId,jdbcType=BIGINT}
+		</foreach>
 	</select>
+
+	<delete id="deleteAnswerById" parameterType="long">
+		DELETE FROM answers
+		WHERE answer_id = #{answerId,jdbcType=BIGINT}
+	</delete>
+
+	<insert id="insertAnswer" parameterType="long">
+		INSERT INTO answers (answer_id) VALUES (#{answerId,jdbcType=BIGINT})
+	</insert>
+
+
+	<insert id="insertQuestion" parameterType="ltd.newbee.mall.entity.Answer">
+		INSERT INTO question (answer_id, question_id, question_content)
+		VALUES (#{answerId}, #{questionId}, #{questionContent})
+    </insert>
+
+
 </mapper>
