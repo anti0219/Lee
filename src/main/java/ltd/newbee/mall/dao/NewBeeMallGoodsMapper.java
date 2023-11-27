@@ -11,6 +11,7 @@ package ltd.newbee.mall.dao;
 import ltd.newbee.mall.entity.Answer;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
 import ltd.newbee.mall.entity.StockNumDTO;
+import ltd.newbee.mall.entity.TmpList;
 import ltd.newbee.mall.util.PageQueryUtil;
 import org.apache.ibatis.annotations.Param;
 
@@ -58,5 +59,9 @@ public interface NewBeeMallGoodsMapper {
     int insertAnswer (long answerId);
     
     void insertQuestion (Answer questionInfo);
+    
+    List<TmpList> findTmpList(PageQueryUtil pageUtil);
+    
+    int getTotalTmpList(PageQueryUtil pageUtil);
 
 }

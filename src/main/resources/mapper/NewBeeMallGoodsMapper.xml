@@ -29,6 +29,11 @@
 		<result column="goods_detail_content" jdbcType="LONGVARCHAR"
 			property="goodsDetailContent" />
 	</resultMap>
+	
+		<!--改写查询专用list-->
+	<sql id="Base_Column_Tmp_List">
+		user_id, item_id
+	</sql>
 	<sql id="Base_Column_List">
 		goods_id, goods_name, goods_intro,goods_category_id, goods_cover_img,
 		goods_carousel, original_price,
@@ -411,6 +416,37 @@
 		INSERT INTO question (answer_id, question_id, question_content)
 		VALUES (#{answerId}, #{questionId}, #{questionContent})
     </insert>
+    
+    	<!--.......................................................................-->
+	<resultMap id="TmpBaseResultMap"
+		type="ltd.newbee.mall.entity.TmpList">
+		<result column="user_id" property="userId" />
+		<result column="item_id" property="itemId" />
+	</resultMap>
+	<!--改写分页查询-->
+	<select id="findTmpList" parameterType="Map"
+		resultMap="TmpBaseResultMap"> select <include
+		refid="Base_Column_Tmp_List" />
+		<!--Base_Column_List 是一个预先定义好的列的合集--> 
+		from tmp_list
+	    <where>
+		<if test="userId!=null and userId!=''">
+			and user_id = #{userId}
+		</if>
+		</where> 
+		<if	test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+	<!--改写分页查询统计总数-->
+	<select id="getTotalTmpList" parameterType="Map" resultType="int"> select
+		count(*) from tmp_list 
+		<where>
+			<if test="userId!=null and userId!=''">
+				and user_id = #{userId}
+			</if>
+		</where>
+	</select>
 
 
 </mapper>

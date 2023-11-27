@@ -110,5 +110,15 @@ public class GoodsController {
     	return ResultGenerator.genSuccessResult(newBeeMallGoodsService.insertAnswerQuestion(questionInfo));
     }
     
+    /*------------分页功能重写------------*/
+    @GetMapping("/answers/tmplist")
+    @ResponseBody
+    public Result tmpList(@RequestParam Map<String, Object> params) {
+        if (ObjectUtils.isEmpty(params.get("page")) || ObjectUtils.isEmpty(params.get("limit"))) {
+            return ResultGenerator.genFailResult("参数异常！");
+        }
+        PageQueryUtil pageUtil = new PageQueryUtil(params);
+        return ResultGenerator.genSuccessResult(newBeeMallGoodsService.getTempList(pageUtil));
+    }
     
 }

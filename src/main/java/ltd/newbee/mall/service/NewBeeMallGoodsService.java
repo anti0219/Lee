@@ -77,5 +77,7 @@ public interface NewBeeMallGoodsService {
 	int deleteAnswerById(long answerId);
 
 	int insertAnswerQuestion(Answer questionInfo);
+	
+	PageResult getTempList(PageQueryUtil pageUtil);
 
 }
