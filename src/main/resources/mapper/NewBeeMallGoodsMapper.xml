@@ -524,7 +524,7 @@
 		</where>
 	</select>
 	
-    <!-- 添加评论功能 -->
+    <!-- 添加评论 -->
  	<insert id="insertUserComment">
        INSERT INTO review_review_list
        VALUES
