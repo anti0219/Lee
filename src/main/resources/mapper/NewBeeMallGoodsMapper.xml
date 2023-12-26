@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ltd.newbee.mall.dao.NewBeeMallGoodsMapper">
+	<resultMap id="BaseResultMap" type="ltd.newbee.mall.entity.NewBeeMallGoods">
+		<id column="goods_id" jdbcType="BIGINT" property="goodsId" />
+		<result column="goods_name" jdbcType="VARCHAR" property="goodsName" />
+		<result column="goods_intro" jdbcType="VARCHAR" property="goodsIntro" />
+		<result column="goods_category_id" jdbcType="BIGINT"
+			property="goodsCategoryId" />
+		<result column="goods_cover_img" jdbcType="VARCHAR"
+			property="goodsCoverImg" />
+		<result column="goods_carousel" jdbcType="VARCHAR"
+			property="goodsCarousel" />
+		<result column="original_price" jdbcType="INTEGER"
+			property="originalPrice" />
+		<result column="selling_price" jdbcType="INTEGER"
+			property="sellingPrice" />
+		<result column="stock_num" jdbcType="INTEGER" property="stockNum" />
+		<result column="tag" jdbcType="VARCHAR" property="tag" />
+		<result column="goods_sell_status" jdbcType="TINYINT"
+			property="goodsSellStatus" />
+		<result column="create_user" jdbcType="INTEGER" property="createUser" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="update_user" jdbcType="INTEGER" property="updateUser" />
+		<result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+	<resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"
+		type="ltd.newbee.mall.entity.NewBeeMallGoods">
+		<result column="goods_detail_content" jdbcType="LONGVARCHAR"
+			property="goodsDetailContent" />
+	</resultMap>
+
+
+	<sql id="Base_Column_List">
+		goods_id, goods_name, goods_intro,goods_category_id, goods_cover_img,
+		goods_carousel, original_price,
+		selling_price, stock_num, tag, goods_sell_status, create_user,
+		create_time, update_user,
+		update_time
+	</sql>
+	<sql id="Blob_Column_List">
+		goods_detail_content
+	</sql>
+
+	<insert id="batchInsert"> INSERT INTO tb_newbee_mall_goods_info(goods_name,
+		goods_intro, goods_category_id,goods_cover_img, goods_carousel,
+		goods_detail_content,original_price, selling_price, stock_num) VALUES <foreach
+			collection="newBeeMallGoodsList" item="goods" separator=",">
+		(#{goods.goodsName},#{goods.goodsIntro},#{goods.goodsCategoryId},#{goods.goodsCoverImg},#{goods.goodsCarousel},#{goods.goodsDetailContent},#{goods.originalPrice},#{goods.sellingPrice},#{goods.stockNum})
+		</foreach>
+	</insert>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Long"
+		resultMap="ResultMapWithBLOBs"> select <include refid="Base_Column_List" />
+		, <include refid="Blob_Column_List" /> from tb_newbee_mall_goods_info
+		where goods_id = #{goodsId,jdbcType=BIGINT} </select>
+	<select id="selectByCategoryIdAndName" resultMap="ResultMapWithBLOBs">
+		select <include refid="Base_Column_List" /> , <include
+			refid="Blob_Column_List" /> from tb_newbee_mall_goods_info where
+		goods_name = #{goodsName,jdbcType=VARCHAR} and goods_category_id =
+		#{goodsCategoryId,jdbcType=BIGINT} </select>
+	<update id="updateStockNum">
+		<foreach collection="stockNumDTOS" item="stockNumDTO">
+			update tb_newbee_mall_goods_info set stock_num =
+			stock_num-#{stockNumDTO.goodsCount}
+			where goods_id = #{stockNumDTO.goodsId} and
+			stock_num>=#{stockNumDTO.goodsCount} and goods_sell_status = 0;
+		</foreach>
+	</update>
+	<update id="recoverStockNum">
+		<foreach collection="stockNumDTOS" item="stockNumDTO">
+			update tb_newbee_mall_goods_info set stock_num =
+			stock_num+#{stockNumDTO.goodsCount}
+			where goods_id = #{stockNumDTO.goodsId} and
+			stock_num>=#{stockNumDTO.goodsCount} and goods_sell_status = 0;
+		</foreach>
+	</update>
+	<update id="batchUpdateSellStatus"> update tb_newbee_mall_goods_info set
+		goods_sell_status=#{sellStatus},update_time=now() where goods_id in <foreach
+			item="id" collection="orderIds" open="(" separator="," close=")">
+		#{id}
+		</foreach>
+	</update>
+	<select id="findNewBeeMallGoodsList" parameterType="Map"
+		resultMap="BaseResultMap"> select <include refid="Base_Column_List" />
+		from tb_newbee_mall_goods_info <where>
+			<if test="goodsName!=null and goodsName!=''">
+				and goods_name like CONCAT('%','#{goodsName}','%')
+			</if>
+			<if test="goodsSellStatus!=null and goodsSellStatus!=''">
+				and goods_sell_status = #{goodsSellStatus}
+			</if>
+			<if test="startTime != null and startTime.trim() != ''">
+				and create_time &gt; #{startTime}
+			</if>
+			<if test="endTime != null and endTime.trim() != ''">
+				and create_time &lt; #{endTime}
+			</if>
+		</where> order
+		by goods_id desc <if test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+
+	<select id="findNewBeeMallGoodsListBySearch" parameterType="Map"
+		resultMap="BaseResultMap"> select <include refid="Base_Column_List" />
+		from tb_newbee_mall_goods_info <where>
+			<if test="keyword!=null and keyword!=''">
+				and (goods_name like CONCAT('%',#{keyword},'%') or goods_intro
+		like CONCAT('%',#{keyword},'%'))
+			</if>
+			<if test="goodsCategoryId!=null and goodsCategoryId!=''">
+				and goods_category_id = #{goodsCategoryId}
+			</if>
+			<if test="goodsSellStatus!=null">
+				and goods_sell_status = #{goodsSellStatus}
+			</if>
+		</where>
+        <if
+			test="orderBy!=null and orderBy!=''">
+			<choose>
+				<when test="orderBy == 'new'">
+					<!-- 按照发布时间倒序排列 --> order by goods_id desc </when>
+				<when test="orderBy == 'price'">
+					<!-- 按照售价从小到大排列 --> order by selling_price asc </when>
+				<otherwise>
+					<!-- 默认按照库存数量从大到小排列 --> order by stock_num desc </otherwise>
+			</choose>
+		</if>
+        <if
+			test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+
+	<select id="getTotalNewBeeMallGoodsBySearch" parameterType="Map"
+		resultType="int"> select count(*) from tb_newbee_mall_goods_info <where>
+			<if test="keyword!=null and keyword!=''">
+				and (goods_name like CONCAT('%',#{keyword},'%') or goods_intro
+		like CONCAT('%',#{keyword},'%'))
+			</if>
+			<if test="goodsCategoryId!=null and goodsCategoryId!=''">
+				and goods_category_id = #{goodsCategoryId}
+			</if>
+			<if test="goodsSellStatus!=null">
+				and goods_sell_status = #{goodsSellStatus}
+			</if>
+		</where>
+	</select>
+
+	<!-- 按照价格降序-->
+	<select id="selectByPrimaryKeys" resultMap="BaseResultMap"> select <include
+			refid="Base_Column_List" /> from tb_newbee_mall_goods_info where
+		goods_id in <foreach item="id" collection="list" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach> order by selling_price desc </select>
+	<select id="getTotalNewBeeMallGoods" parameterType="Map" resultType="int">
+		select count(*) from tb_newbee_mall_goods_info <where>
+			<if test="goodsName!=null and goodsName!=''">
+				and goods_name like CONCAT('%','#{goodsName}','%')
+			</if>
+			<if test="goodsSellStatus!=null and goodsSellStatus!=''">
+				and goods_sell_status = #{goodsSellStatus}
+			</if>
+			<if test="startTime != null and startTime.trim() != ''">
+				and create_time &gt; #{startTime}
+			</if>
+			<if test="endTime != null and endTime.trim() != ''">
+				and create_time &lt; #{endTime}
+			</if>
+		</where>
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from tb_newbee_mall_goods_info
+		where goods_id = #{goodsId,jdbcType=BIGINT}
+	</delete>
+	<insert id="insert" parameterType="ltd.newbee.mall.entity.NewBeeMallGoods">
+		insert into tb_newbee_mall_goods_info (goods_id, goods_name,
+		goods_intro,
+		goods_cover_img, goods_carousel, original_price,
+		selling_price, stock_num, tag,
+		goods_sell_status, create_user, create_time,
+		update_user, update_time, goods_detail_content
+		)
+		values (#{goodsId,jdbcType=BIGINT}, #{goodsName,jdbcType=VARCHAR},
+		#{goodsIntro,jdbcType=VARCHAR},
+		#{goodsCoverImg,jdbcType=VARCHAR}, #{goodsCarousel,jdbcType=VARCHAR},
+		#{originalPrice,jdbcType=INTEGER},
+		#{sellingPrice,jdbcType=INTEGER}, #{stockNum,jdbcType=INTEGER},
+		#{tag,jdbcType=VARCHAR},
+		#{goodsSellStatus,jdbcType=TINYINT}, #{createUser,jdbcType=INTEGER},
+		#{createTime,jdbcType=TIMESTAMP},
+		#{updateUser,jdbcType=INTEGER}, #{updateTime,jdbcType=TIMESTAMP},
+		#{goodsDetailContent,jdbcType=LONGVARCHAR}
+		)
+	</insert>
+	<insert id="insertSelective"
+		parameterType="ltd.newbee.mall.entity.NewBeeMallGoods"> insert into
+		tb_newbee_mall_goods_info <trim prefix="(" suffix=")"
+			suffixOverrides=",">
+			<if test="goodsId != null">
+				goods_id,
+			</if>
+			<if test="goodsName != null">
+				goods_name,
+			</if>
+			<if test="goodsIntro != null">
+				goods_intro,
+			</if>
+			<if test="goodsCategoryId != null">
+				goods_category_id,
+			</if>
+			<if test="goodsCoverImg != null">
+				goods_cover_img,
+			</if>
+			<if test="goodsCarousel != null">
+				goods_carousel,
+			</if>
+			<if test="originalPrice != null">
+				original_price,
+			</if>
+			<if test="sellingPrice != null">
+				selling_price,
+			</if>
+			<if test="stockNum != null">
+				stock_num,
+			</if>
+			<if test="tag != null">
+				tag,
+			</if>
+			<if test="goodsSellStatus != null">
+				goods_sell_status,
+			</if>
+			<if test="createUser != null">
+				create_user,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="updateUser != null">
+				update_user,
+			</if>
+			<if test="updateTime != null">
+				update_time,
+			</if>
+			<if test="goodsDetailContent != null">
+				goods_detail_content,
+			</if>
+		</trim>
+        <trim
+			prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="goodsId != null">
+				#{goodsId,jdbcType=BIGINT},
+			</if>
+			<if test="goodsName != null">
+				#{goodsName,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsIntro != null">
+				#{goodsIntro,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsIntro != null">
+				#{goodsCategoryId,jdbcType=BIGINT},
+			</if>
+			<if test="goodsCoverImg != null">
+				#{goodsCoverImg,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsCarousel != null">
+				#{goodsCarousel,jdbcType=VARCHAR},
+			</if>
+			<if test="originalPrice != null">
+				#{originalPrice,jdbcType=INTEGER},
+			</if>
+			<if test="sellingPrice != null">
+				#{sellingPrice,jdbcType=INTEGER},
+			</if>
+			<if test="stockNum != null">
+				#{stockNum,jdbcType=INTEGER},
+			</if>
+			<if test="tag != null">
+				#{tag,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsSellStatus != null">
+		#{goodsSellStatus,jdbcType=TINYINT},
+			</if>
+			<if test="createUser != null">
+				#{createUser,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updateUser != null">
+				#{updateUser,jdbcType=INTEGER},
+			</if>
+			<if test="updateTime != null">
+				#{updateTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="goodsDetailContent != null">
+		#{goodsDetailContent,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="ltd.newbee.mall.entity.NewBeeMallGoods"> update
+		tb_newbee_mall_goods_info <set>
+			<if test="goodsName != null">
+				goods_name = #{goodsName,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsIntro != null">
+				goods_intro = #{goodsIntro,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsCategoryId != null">
+				goods_category_id = #{goodsCategoryId,jdbcType=BIGINT},
+			</if>
+			<if test="goodsCoverImg != null">
+				goods_cover_img = #{goodsCoverImg,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsCarousel != null">
+				goods_carousel = #{goodsCarousel,jdbcType=VARCHAR},
+			</if>
+			<if test="originalPrice != null">
+				original_price = #{originalPrice,jdbcType=INTEGER},
+			</if>
+			<if test="sellingPrice != null">
+				selling_price = #{sellingPrice,jdbcType=INTEGER},
+			</if>
+			<if test="stockNum != null">
+				stock_num = #{stockNum,jdbcType=INTEGER},
+			</if>
+			<if test="tag != null">
+				tag = #{tag,jdbcType=VARCHAR},
+			</if>
+			<if test="goodsSellStatus != null">
+				goods_sell_status = #{goodsSellStatus,jdbcType=TINYINT},
+			</if>
+			<if test="createUser != null">
+				create_user = #{createUser,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updateUser != null">
+				update_user = #{updateUser,jdbcType=INTEGER},
+			</if>
+			<if test="updateTime != null">
+				update_time = #{updateTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="goodsDetailContent != null">
+				goods_detail_content =
+		#{goodsDetailContent,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where goods_id = #{goodsId,jdbcType=BIGINT} </update>
+	<update id="updateByPrimaryKeyWithBLOBs"
+		parameterType="ltd.newbee.mall.entity.NewBeeMallGoods">
+		update tb_newbee_mall_goods_info
+		set goods_name = #{goodsName,jdbcType=VARCHAR},
+		goods_intro = #{goodsIntro,jdbcType=VARCHAR},
+		goods_cover_img = #{goodsCoverImg,jdbcType=VARCHAR},
+		goods_carousel = #{goodsCarousel,jdbcType=VARCHAR},
+		original_price = #{originalPrice,jdbcType=INTEGER},
+		selling_price = #{sellingPrice,jdbcType=INTEGER},
+		stock_num = #{stockNum,jdbcType=INTEGER},
+		tag = #{tag,jdbcType=VARCHAR},
+		goods_sell_status = #{goodsSellStatus,jdbcType=TINYINT},
+		create_user = #{createUser,jdbcType=INTEGER},
+		create_time = #{createTime,jdbcType=TIMESTAMP},
+		update_user = #{updateUser,jdbcType=INTEGER},
+		update_time = #{updateTime,jdbcType=TIMESTAMP},
+		goods_detail_content = #{goodsDetailContent,jdbcType=LONGVARCHAR}
+		where goods_id = #{goodsId,jdbcType=BIGINT}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="ltd.newbee.mall.entity.NewBeeMallGoods">
+		update tb_newbee_mall_goods_info
+		set goods_name = #{goodsName,jdbcType=VARCHAR},
+		goods_intro = #{goodsIntro,jdbcType=VARCHAR},
+		goods_cover_img = #{goodsCoverImg,jdbcType=VARCHAR},
+		goods_carousel = #{goodsCarousel,jdbcType=VARCHAR},
+		original_price = #{originalPrice,jdbcType=INTEGER},
+		selling_price = #{sellingPrice,jdbcType=INTEGER},
+		stock_num = #{stockNum,jdbcType=INTEGER},
+		tag = #{tag,jdbcType=VARCHAR},
+		goods_sell_status = #{goodsSellStatus,jdbcType=TINYINT},
+		create_user = #{createUser,jdbcType=INTEGER},
+		create_time = #{createTime,jdbcType=TIMESTAMP},
+		update_user = #{updateUser,jdbcType=INTEGER},
+		update_time = #{updateTime,jdbcType=TIMESTAMP}
+		where goods_id = #{goodsId,jdbcType=BIGINT}
+	</update>
+	<select id="getAnswerById" parameterType="long"
+		resultType="ltd.newbee.mall.entity.Answer"> SELECT
+		a.answer_id,q.question_id, q.question_content FROM question q JOIN
+		answers a ON q.answer_id = a.answer_id where a.answer_id IN <foreach
+			item="answerId" collection="answerId" open="(" separator=","
+			close=")">
+			#{answerId,jdbcType=BIGINT}
+		</foreach>
+	</select>
+
+	<delete id="deleteAnswerById" parameterType="long">
+		DELETE FROM answers
+		WHERE answer_id = #{answerId,jdbcType=BIGINT}
+	</delete>
+
+	<insert id="insertAnswer" parameterType="long">
+		INSERT INTO answers (answer_id) VALUES (#{answerId,jdbcType=BIGINT})
+	</insert>
+
+
+	<insert id="insertQuestion" parameterType="ltd.newbee.mall.entity.Answer">
+		INSERT INTO question (answer_id, question_id, question_content)
+		VALUES (#{answerId}, #{questionId}, #{questionContent})
+	</insert>
+
+	<!--.......................................................................-->
+	<!--改写查询专用list-->
+	<sql id="Base_Column_Tmp_List">
+		user_id, item_id
+	</sql>
+	<resultMap id="TmpBaseResultMap"
+		type="ltd.newbee.mall.entity.TmpList">
+		<result column="user_id" property="userId" />
+		<result column="item_id" property="itemId" />
+	</resultMap>
+	<!--改写分页查询-->
+	<select id="findTmpList" parameterType="Map"
+		resultMap="TmpBaseResultMap"> select <include
+			refid="Base_Column_Tmp_List" />
+		<!--Base_Column_List 是一个预先定义好的列的合集--> from tmp_list <where>
+			<if test="userId!=null and userId!=''">
+				and user_id = #{userId}
+			</if>
+		</where> 
+		<if
+			test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+	<!--改写分页查询统计总数-->
+	<select id="getTotalTmpList" parameterType="Map" resultType="int"> select
+		count(*) from tmp_list <where>
+			<if test="userId!=null and userId!=''">
+				and user_id = #{userId}
+			</if>
+		</where>
+	</select>
+
+	<!--写入用户的浏览记录-->
+	<insert id="insertBrwoseHistory">
+		INSERT INTO user_browse_history (user_id, goods_id, browse_time)
+		VALUES (#{userId}, #{goodsId}, CURRENT_TIMESTAMP)
+		ON DUPLICATE KEY UPDATE browse_time = CURRENT_TIMESTAMP
+	</insert>
+
+
+	<select id="selectByBrowseTime" resultMap="BaseResultMap"> select <include
+			refid="Base_Column_List" /> from tb_newbee_mall_goods_info where
+		goods_id in <foreach item="id" collection="list" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach> ORDER BY FIELD (goods_id, <foreach item="item"
+			index="index" collection="list" separator=", ">
+			#{item}
+		</foreach>) limit 10 </select>
+
+	<!--查询总历史记录数-->
+	<select id="getTotalHistory" resultType="int">
+		SELECT COUNT(*) FROM user_browse_history
+	</select>
+
+	<!-- 用于获得特定goodsId在SKU表里的行 -->
+	<resultMap id="skuResultMap" type="ltd.newbee.mall.entity.SkuInfo">
+		<result property="goodsId" column="goods_id" />
+		<result property="skuId" column="sku_id" />
+		<result property="stock" column="stock" />
+		<result property="price" column="price" />
+		<result property="column1" column="column1" />
+		<result property="column2" column="column2" />
+		<result property="column3" column="column3" />
+	</resultMap>
+
+	<select id="getSkuListByGoodsId" resultMap="skuResultMap">
+		SELECT goods_id, sku_id, stock, price, column1, column2, column3
+		FROM demo_sku
+		WHERE goods_id = #{goodsId}
+	</select>
+
+	<select id="getColumnByParams" resultType="java.lang.String"> SELECT
+		sku_column FROM demo_goods_column_mangement WHERE goods_id = #{goodsId}
+		AND ( <foreach item="item" collection="filterForColumn" separator="OR">
+		sku_text = #{item}
+		</foreach> ) </select>
+
+	<select id="getImageUrl" resultType="java.lang.String">
+		SELECT image_url
+		FROM demo_sku_images
+		WHERE sku_id = #{skuId}
+	</select>
+
+	<!-- Review板块 -->
+	<select id="getReviewList" resultType="ltd.newbee.mall.entity.GoodsReview">
+		SELECT
+		r.review_id,r.goods_id,r.user_id,r.rating,r.sku_id,r.ask_date,r.content
+		FROM review_review_list r 
+		WHERE r.goods_id = #{goodsId} 
+		<if test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+	<select id="getReviewImageUrl" resultType="java.lang.String">
+		SELECT image_url 
+		FROM review_content_image
+		WHERE review_id = #{reviewId} 
+		AND user_id = #{userId}
+	</select>
+
+	<select id="getTotalReview" resultType="int">
+		SELECT COUNT(*) FROM
+		review_review_list 
+		<where>
+			<if test="goodsId!=null and goodsId!=''">
+				AND goods_id = #{goodsId}
+			</if>
+		</where>
+	</select>
+	
+    <!-- 添加评论 -->
+ 	<insert id="insertUserComment">
+       INSERT INTO review_review_list
+       VALUES
+       (#{reviewId},#{goodsId},#{userId},#{rating},#{skuId},#{askDate},#{title},#{content},#{nickName})
+    </insert>		
+	<insert id="insertReviewImage" parameterType="map">
+       INSERT INTO review_content_image (review_id, user_id, path, image_name)
+       VALUES
+       <foreach collection="imageNames" item="imageName" separator="," open="" close="">
+	   (#{reviewId}, #{userId},#{path}, #{imageName})
+	   </foreach>
+    </insert>
+
+    
+    <!-- 管理点赞 -->
+    <insert id="handleUserLikeState">
+		INSERT INTO review_user_review_management_list
+		VALUES
+		(#{reviewId},#{commentUserId},#{userId},#{likeState})
+	</insert>
+	<update id="increaseLikeNum">
+        UPDATE review_review_list
+        SET like_num = like_num + 1
+        WHERE review_id = #{reviewId} AND user_id = #{userId}
+    </update>
+
+	
+</mapper>
