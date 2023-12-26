@@ -500,8 +500,7 @@
 	<!-- Review板块 -->
 	<select id="getReviewList" resultType="ltd.newbee.mall.entity.GoodsReview">
 		SELECT
-		r.review_id,r.goods_id,r.user_id,r.rating,r.sku_id,r.ask_date,r.content,
-		(SELECT COUNT(*) FROM review_user_review_management_list WHERE review_id = r.review_id AND comment_user_id = r.user_id) AS like_num
+		r.review_id,r.goods_id,r.user_id,r.rating,r.sku_id,r.ask_date,r.content
 		FROM review_review_list r 
 		WHERE r.goods_id = #{goodsId} 
 		<if test="start!=null and limit!=null">
@@ -509,7 +508,7 @@
 		</if>
 	</select>
 	<select id="getReviewImageUrl" resultType="java.lang.String">
-		SELECT path 
+		SELECT image_url 
 		FROM review_content_image
 		WHERE review_id = #{reviewId} 
 		AND user_id = #{userId}
@@ -544,7 +543,7 @@
     <insert id="handleUserLikeState">
 		INSERT INTO review_user_review_management_list
 		VALUES
-		(#{reviewId},#{commentUserId},#{userId})
+		(#{reviewId},#{commentUserId},#{userId},#{likeState})
 	</insert>
 	<update id="increaseLikeNum">
         UPDATE review_review_list
