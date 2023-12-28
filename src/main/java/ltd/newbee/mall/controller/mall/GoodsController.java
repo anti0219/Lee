@@ -199,9 +199,9 @@ public class GoodsController {
     public Result saveShoppingCartItem(@RequestBody ShoppingCartItem shoppingCartItem,
                                                  HttpSession httpSession) {
     	
-    	Long a = (long) 10000;
-        //NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);//获取userId
-        shoppingCartItem.setUserId(a);
+    	//Long a = (long) 10000;
+        NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);//获取userId
+        shoppingCartItem.setUserId(user.getUserId());
         String saveResult = newBeeMallGoodsService.saveCartItem(shoppingCartItem);
         //添加成功
         if (ServiceResultEnum.SUCCESS.getResult().equals(saveResult)) {
