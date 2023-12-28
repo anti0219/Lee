@@ -17,7 +17,9 @@ import ltd.newbee.mall.controller.vo.SearchPageCategoryVO;
 import ltd.newbee.mall.entity.Answer;
 import ltd.newbee.mall.entity.GoodsReview;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.entity.NewBeeMallShoppingCartItem;
 import ltd.newbee.mall.entity.Review;
+import ltd.newbee.mall.entity.ShoppingCartItem;
 import ltd.newbee.mall.entity.SkuUpdateInfo;
 import ltd.newbee.mall.entity.UpdateInfoRequest;
 import ltd.newbee.mall.service.NewBeeMallCategoryService;
@@ -154,6 +156,7 @@ public class GoodsController {
 		responseData.put("stock",updateInfo.getStock());
 		responseData.put("price",updateInfo.getPrice());
 		responseData.put("imageUrl",updateInfo.getImageUrl());
+		responseData.put("skuId",updateInfo.getSkuId());
 		
     	return ResponseEntity.ok(responseData);
 	}
@@ -189,4 +192,20 @@ public class GoodsController {
 		
 		return ResultGenerator.genSuccessResult(newBeeMallGoodsService.handleUserLikeState(goodsReview));
 	}
+	
+	//添加购物车
+    @PostMapping("/goods/cart")
+    @ResponseBody
+    public Result saveNewBeeMallShoppingCartItem(@RequestBody ShoppingCartItem shoppingCartItem,
+                                                 HttpSession httpSession) {
+        NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);//获取userId
+        shoppingCartItem.setUserId(user.getUserId());
+        String saveResult = newBeeMallGoodsService.saveCartItem(shoppingCartItem);
+        //添加成功
+        if (ServiceResultEnum.SUCCESS.getResult().equals(saveResult)) {
+            return ResultGenerator.genSuccessResult();
+        }
+        //添加失败
+        return ResultGenerator.genFailResult(saveResult);
+    }
 }

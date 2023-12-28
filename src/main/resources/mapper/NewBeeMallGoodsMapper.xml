@@ -504,6 +504,14 @@
 		(SELECT COUNT(*) FROM review_user_review_management_list WHERE review_id = r.review_id AND comment_user_id = r.user_id) AS like_num
 		FROM review_review_list r 
 		WHERE r.goods_id = #{goodsId} 
+		<choose>
+			<when test="sortType == 'rating'">
+				ORDER BY rating DESC
+			</when>
+			<when test="sortType == 'askDate'">
+				ORDER BY ask_date DESC
+			</when>
+		</choose>
 		<if test="start!=null and limit!=null">
 			limit #{start},#{limit}
 		</if>
@@ -514,7 +522,6 @@
 		WHERE review_id = #{reviewId} 
 		AND user_id = #{userId}
 	</select>
-
 	<select id="getTotalReview" resultType="int">
 		SELECT COUNT(*) FROM
 		review_review_list 
@@ -551,6 +558,107 @@
         SET like_num = like_num + 1
         WHERE review_id = #{reviewId} AND user_id = #{userId}
     </update>
-
+	
+	<!-- 添加购物车 -->
+	<select id="selectByUserIdAndSkuId">
+        select
+        *
+        from cart_user_cart
+        where user_id = #{userId,jdbcType=BIGINT} and sku_id=#{skuId,jdbcType=VARCHAR} and is_deleted = 0
+        limit 1
+    </select>
+    <select id="selectByCartItemId">
+        select
+        *
+        from cart_user_cart
+        where cart_item_id = #{cartItem,jdbcType=BIGINT} and is_deleted = 0
+    </select>
+    <select id="selectCartItemCountByUserId">
+        select count(*)
+        from cart_user_cart
+        where user_id = #{userId,jdbcType=BIGINT} and is_deleted = 0
+    </select>
+    <insert id="insertCartItem" parameterType="ltd.newbee.mall.entity.ShoppingCartItem">
+        insert into cart_user_cart
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cartItemId != null">
+                cart_item_id,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="skuId != null">
+                sku_id,
+            </if>
+            <if test="goodsId != null">
+                goods_id,
+            </if>
+            <if test="goodsCount != null">
+                goods_count,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cartItemId != null">
+                #{cartItemId,jdbcType=BIGINT},
+            </if>           
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="skuId != null">
+                #{skuId,jdbcType=VARCHAR},
+            </if>
+            <if test="goodsId != null">
+                #{goodsId,jdbcType=BIGINT},
+            </if>
+            <if test="goodsCount != null">
+                #{goodsCount,jdbcType=INTEGER},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=TINYINT},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateCartItemByPrimaryKeySelective" parameterType="ltd.newbee.mall.entity.NewBeeMallShoppingCartItem">
+        update cart_user_cart
+        <set>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="skuId != null">
+                sku_id = #{skuId,jdbcType=BIGINT},
+            </if>
+            <if test="goodsId != null">
+                goods_id = #{goodsId,jdbcType=BIGINT},
+            </if>
+            <if test="goodsCount != null">
+                goods_count = #{goodsCount,jdbcType=INTEGER},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=TINYINT},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where cart_item_id = #{cartItemId,jdbcType=BIGINT}
+    </update>
 	
 </mapper>

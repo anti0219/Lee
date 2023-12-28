@@ -5,6 +5,7 @@ import java.util.List;
 public class SkuUpdateInfo {
 	int price;
 	int stock;
+	String skuId;
 	List<String> imageUrl;
 	
 
@@ -22,6 +23,14 @@ public class SkuUpdateInfo {
 
 	public void setStock(int stock) {
 		this.stock = stock;
+	}
+	
+	public String getSkuId() {
+		return skuId;
+	}
+
+	public void setSkuId(String skuId) {
+		this.skuId = skuId;
 	}
 
 	public List<String> getImageUrl() {

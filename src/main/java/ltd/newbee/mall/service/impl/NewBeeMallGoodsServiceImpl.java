@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.beanutils.BeanUtils;
+
+import ltd.newbee.mall.common.Constants;
 import ltd.newbee.mall.common.NewBeeMallCategoryLevelEnum;
 import ltd.newbee.mall.common.NewBeeMallException;
 import ltd.newbee.mall.common.ServiceResultEnum;
@@ -33,7 +35,9 @@ import ltd.newbee.mall.entity.Answer;
 import ltd.newbee.mall.entity.GoodsCategory;
 import ltd.newbee.mall.entity.GoodsReview;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.entity.NewBeeMallShoppingCartItem;
 import ltd.newbee.mall.entity.Review;
+import ltd.newbee.mall.entity.ShoppingCartItem;
 import ltd.newbee.mall.entity.SkuInfo;
 import ltd.newbee.mall.entity.SkuUpdateInfo;
 import ltd.newbee.mall.entity.TmpList;
@@ -245,6 +249,7 @@ public class NewBeeMallGoodsServiceImpl implements NewBeeMallGoodsService {
 		//获取imageUrl
 		imageUrl = goodsMapper.getImageUrl(skuId);
 		
+		skuUpdateInfo.setSkuId(skuId);
 		skuUpdateInfo.setPrice(price);
 		skuUpdateInfo.setStock(stock);
 		skuUpdateInfo.setImageUrl(imageUrl);
@@ -304,4 +309,61 @@ public class NewBeeMallGoodsServiceImpl implements NewBeeMallGoodsService {
 		return result;
 	}
 	
+	//添加购物车
+	@Override
+	public String saveCartItem(ShoppingCartItem shoppingCartItem) {
+		//从数据库直接读取数据维护现有记录
+		ShoppingCartItem temp = goodsMapper.selectByUserIdAndSkuId(shoppingCartItem.getUserId(), shoppingCartItem.getSkuId());
+        if (temp != null) {
+            //已存在则修改该记录
+            temp.setGoodsCount(shoppingCartItem.getGoodsCount());
+            return updateCartItem(temp);
+        }
+        NewBeeMallGoods newBeeMallGoods = goodsMapper.selectByPrimaryKey(shoppingCartItem.getGoodsId());
+        //商品为空
+        if (newBeeMallGoods == null) {
+            return ServiceResultEnum.GOODS_NOT_EXIST.getResult();
+        }
+        int totalItem = goodsMapper.selectCartItemCountByUserId(shoppingCartItem.getUserId()) + 1;//购物车总商品种类数
+        //超出单个商品的最大数量
+        if (shoppingCartItem.getGoodsCount() > Constants.SHOPPING_CART_ITEM_LIMIT_NUMBER) {
+            return ServiceResultEnum.SHOPPING_CART_ITEM_LIMIT_NUMBER_ERROR.getResult();
+        }
+        //超出最大数量
+        if (totalItem > Constants.SHOPPING_CART_ITEM_TOTAL_NUMBER) {
+            return ServiceResultEnum.SHOPPING_CART_ITEM_TOTAL_NUMBER_ERROR.getResult();
+        }
+        //保存记录
+        if (goodsMapper.insertCartItem(shoppingCartItem) > 0) {
+            return ServiceResultEnum.SUCCESS.getResult();
+        }
+		return ServiceResultEnum.DB_ERROR.getResult();
+	}
+	
+    @Override
+    public String updateCartItem(ShoppingCartItem shoppingCartItem) {
+    	ShoppingCartItem shoppingCartItemUpdate = goodsMapper.selectByCartItemId(shoppingCartItem.getCartItemId());
+        if (shoppingCartItemUpdate == null) {
+            return ServiceResultEnum.DATA_NOT_EXIST.getResult();
+        }
+        //超出单个商品的最大数量
+        if (shoppingCartItem.getGoodsCount() > Constants.SHOPPING_CART_ITEM_LIMIT_NUMBER) {
+            return ServiceResultEnum.SHOPPING_CART_ITEM_LIMIT_NUMBER_ERROR.getResult();
+        }
+        //当前登录账号的userId与待修改的cartItem中userId不同，返回错误
+        if (!shoppingCartItemUpdate.getUserId().equals(shoppingCartItem.getUserId())) {
+            return ServiceResultEnum.NO_PERMISSION_ERROR.getResult();
+        }
+        //数值相同，则不执行数据操作
+        if (shoppingCartItem.getGoodsCount().equals(shoppingCartItemUpdate.getGoodsCount())) {
+            return ServiceResultEnum.SUCCESS.getResult();
+        }
+        shoppingCartItemUpdate.setGoodsCount(shoppingCartItem.getGoodsCount());
+        shoppingCartItemUpdate.setUpdateTime(new Date());
+        //修改记录
+        if (goodsMapper.updateCartItemByPrimaryKeySelective(shoppingCartItem) > 0) {
+            return ServiceResultEnum.SUCCESS.getResult();
+        }
+        return ServiceResultEnum.DB_ERROR.getResult();
+    }
 }

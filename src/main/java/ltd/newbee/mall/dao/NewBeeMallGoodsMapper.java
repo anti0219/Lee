@@ -11,7 +11,9 @@ package ltd.newbee.mall.dao;
 import ltd.newbee.mall.entity.Answer;
 import ltd.newbee.mall.entity.GoodsReview;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.entity.NewBeeMallShoppingCartItem;
 import ltd.newbee.mall.entity.Review;
+import ltd.newbee.mall.entity.ShoppingCartItem;
 import ltd.newbee.mall.entity.SkuInfo;
 import ltd.newbee.mall.entity.SkuUpdateInfo;
 import ltd.newbee.mall.entity.StockNumDTO;
@@ -96,4 +98,12 @@ public interface NewBeeMallGoodsMapper {
 	//like
 	int handleUserLikeState (String reviewId,int commentUserId,int userId,boolean likeState);
 	int increaseLikeNum(String reviewId,int userId);
+	
+	//添加购物车
+	ShoppingCartItem selectByUserIdAndSkuId(Long userId,String skuId);
+	ShoppingCartItem selectByCartItemId(Long cartItemId );
+	int updateCartItemByPrimaryKeySelective(ShoppingCartItem shoppingCartItem);
+	int selectCartItemCountByUserId(Long userId);
+
+	int insertCartItem(ShoppingCartItem shoppingCartItem);
 }
