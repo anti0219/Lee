@@ -104,6 +104,5 @@ public interface NewBeeMallGoodsMapper {
 	ShoppingCartItem selectByCartItemId(Long cartItemId );
 	int updateCartItemByPrimaryKeySelective(ShoppingCartItem shoppingCartItem);
 	int selectCartItemCountByUserId(Long userId);
-
 	int insertCartItem(ShoppingCartItem shoppingCartItem);
 }

@@ -560,20 +560,20 @@
     </update>
 	
 	<!-- 添加购物车 -->
-	<select id="selectByUserIdAndSkuId">
+	<select id="selectByUserIdAndSkuId" resultType="ltd.newbee.mall.entity.ShoppingCartItem">
         select
         *
         from cart_user_cart
         where user_id = #{userId,jdbcType=BIGINT} and sku_id=#{skuId,jdbcType=VARCHAR} and is_deleted = 0
         limit 1
     </select>
-    <select id="selectByCartItemId">
+    <select id="selectByCartItemId" resultType="ltd.newbee.mall.entity.ShoppingCartItem">
         select
         *
         from cart_user_cart
         where cart_item_id = #{cartItem,jdbcType=BIGINT} and is_deleted = 0
     </select>
-    <select id="selectCartItemCountByUserId">
+    <select id="selectCartItemCountByUserId" resultType="java.lang.Integer">
         select count(*)
         from cart_user_cart
         where user_id = #{userId,jdbcType=BIGINT} and is_deleted = 0

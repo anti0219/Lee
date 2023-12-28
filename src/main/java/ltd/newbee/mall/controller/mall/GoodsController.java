@@ -196,10 +196,12 @@ public class GoodsController {
 	//添加购物车
     @PostMapping("/goods/cart")
     @ResponseBody
-    public Result saveNewBeeMallShoppingCartItem(@RequestBody ShoppingCartItem shoppingCartItem,
+    public Result saveShoppingCartItem(@RequestBody ShoppingCartItem shoppingCartItem,
                                                  HttpSession httpSession) {
-        NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);//获取userId
-        shoppingCartItem.setUserId(user.getUserId());
+    	
+    	Long a = (long) 10000;
+        //NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);//获取userId
+        shoppingCartItem.setUserId(a);
         String saveResult = newBeeMallGoodsService.saveCartItem(shoppingCartItem);
         //添加成功
         if (ServiceResultEnum.SUCCESS.getResult().equals(saveResult)) {
