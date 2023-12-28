@@ -48,6 +48,8 @@ public class Constants {
     public final static int SELL_STATUS_DOWN = 1;//商品下架状态
     
     public final static String USER_BROWSE_HISTORY = "USER_BROWSE_HISTORY";
+    
+    public final static int SUBMMIT_REVIEW_IMAGE_NUMBER = 5;//提交商品评论附带图片最大数量
 
 
 }
